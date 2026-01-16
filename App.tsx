@@ -29,16 +29,20 @@ import { CATEGORIES, PRICE_BUCKETS, MOCK_COMPETITORS } from './constants';
 import { CompetitorData, Category } from './types';
 import { generateMockData, analyzeCompetitor } from './services/geminiService';
 
-// Professional, muted palette: Navies, Slates, and sophisticated accents
+/**
+ * HIGH-CONTRAST PROFESSIONAL PALETTE
+ * Using a sequential multi-hue progression (Navy -> Purple -> Rose -> Orange -> Gold)
+ * This ensures maximum distinguishability between sequential price buckets.
+ */
 const COLORS = [
-  '#0f172a', // Slate 900
-  '#334155', // Slate 700
-  '#475569', // Slate 600
-  '#64748b', // Slate 500
-  '#94a3b8', // Slate 400
-  '#0d9488', // Teal 600 (sophisticated accent)
-  '#0891b2', // Cyan 600
-  '#1e40af'  // Blue 800
+  '#003f5c', // Under $100 (Deep Navy)
+  '#2f4b7c', // $100 to $199 (Steel Blue)
+  '#665191', // $200 to $299 (Deep Purple)
+  '#a05195', // $300 to $399 (Magenta)
+  '#d45087', // $400 to $599 (Rose)
+  '#f95d6a', // $600 to $799 (Coral/Red)
+  '#ff7c43', // $799 to $999 (Orange)
+  '#ffa600'  // $1000+ (Gold/Yellow)
 ];
 
 const App: React.FC = () => {
@@ -59,11 +63,6 @@ const App: React.FC = () => {
   const selectedCompetitor = useMemo(() => 
     competitors.find(c => c.id === selectedId), 
     [competitors, selectedId]
-  );
-
-  const toddSnyder = useMemo(() => 
-    competitors.find(c => c.name === 'Todd Snyder'), 
-    [competitors]
   );
 
   const handleRefresh = async (id: string) => {
@@ -435,29 +434,7 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              {/* Assortment Volume Horizontal Bar Chart */}
-              <div className="bg-white p-6 rounded border border-slate-200 shadow-sm">
-                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 mb-8 flex items-center gap-2">
-                  <Package className="w-4 h-4 text-slate-300" />
-                  Total Assortment Volume
-                </h3>
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={crossBrandAssortment} layout="vertical" margin={{ left: 40, right: 40 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
-                      <XAxis type="number" hide />
-                      <YAxis dataKey="name" type="category" fontSize={11} fontWeight={700} width={120} axisLine={false} tickLine={false} />
-                      <Tooltip 
-                        cursor={{ fill: '#f8fafc' }}
-                        contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', fontSize: '12px' }}
-                      />
-                      <Bar dataKey="styles" fill="#0f172a" radius={[0, 2, 2, 0]} barSize={24} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* Multi-Brand Price Point Distribution */}
+              {/* Multi-Brand Price Point Distribution Curve */}
               <div className="bg-white p-6 rounded border border-slate-200 shadow-sm">
                 <div className="flex items-center justify-between mb-10">
                   <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
@@ -553,30 +530,6 @@ const App: React.FC = () => {
             </div>
           ) : activeTab === 'overview' ? (
             <>
-              {/* Data Sources */}
-              {selectedCompetitor?.sources && selectedCompetitor.sources.length > 0 && (
-                <div className="bg-slate-50 border border-slate-200 rounded p-4">
-                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                    <Globe className="w-3.5 h-3.5" />
-                    Market Data Origin
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedCompetitor.sources.map((source, idx) => (
-                      <a 
-                        key={idx} 
-                        href={source.uri} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm group uppercase tracking-wider"
-                      >
-                        <span className="max-w-[200px] truncate">{source.title}</span>
-                        <ExternalLink className="w-3 h-3 opacity-50 group-hover:opacity-100" />
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <StatCard 
@@ -623,7 +576,7 @@ const App: React.FC = () => {
                         <Tooltip 
                           contentStyle={{ borderRadius: '4px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', backgroundColor: 'white' }}
                         />
-                        <Bar dataKey="count" fill="#0f172a" radius={[2, 2, 0, 0]} barSize={32} />
+                        <Bar dataKey="count" fill="#003f5c" radius={[2, 2, 0, 0]} barSize={32} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -685,7 +638,7 @@ const App: React.FC = () => {
                       {selectedCompetitor?.data.map((row) => (
                         <tr key={row.category} className="hover:bg-slate-50 transition-colors">
                           <td className="px-8 py-3.5 font-bold text-slate-700 uppercase tracking-tight border-b border-slate-100 sticky left-0 bg-white shadow-[2px_0_5px_rgba(0,0,0,0.02)]">{row.category}</td>
-                          {PRICE_BUCKETS.map(bucket => {
+                          {PRICE_BUCKETS.map((bucket, idx) => {
                             const val = row.counts[bucket] || 0;
                             const intensity = Math.min(val / 25, 1);
                             return (
@@ -693,9 +646,10 @@ const App: React.FC = () => {
                                 <div 
                                   className="mx-auto w-9 h-7 flex items-center justify-center rounded font-bold text-[10px] transition-all"
                                   style={{ 
-                                    backgroundColor: val > 0 ? `rgba(15, 23, 42, ${intensity * 0.4 + 0.05})` : 'transparent',
-                                    color: val > 0 ? '#1e293b' : '#cbd5e1',
-                                    border: val > 0 ? `1px solid rgba(15, 23, 42, 0.1)` : '1px dashed #f1f5f9'
+                                    backgroundColor: val > 0 ? COLORS[idx % COLORS.length] : 'transparent',
+                                    color: val > 15 ? '#fff' : (val > 0 ? COLORS[idx % COLORS.length] : '#cbd5e1'),
+                                    opacity: val > 0 ? Math.max(intensity, 0.4) : 1,
+                                    border: val > 0 ? `1px solid ${COLORS[idx % COLORS.length]}` : '1px dashed #f1f5f9'
                                   }}
                                 >
                                   {val}
